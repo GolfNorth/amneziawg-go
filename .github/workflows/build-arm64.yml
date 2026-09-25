@@ -1,0 +1,38 @@
+name: build-arm64
+
+# Cross-compiles amneziawg-go (userspace, pure Go, no kernel module) for the
+# NanoPi R3S (aarch64). Run manually from the Actions tab, or it fires on push.
+# Download the binary from the run's "Artifacts" section.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master, main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build linux/arm64
+        env:
+          GOOS: linux
+          GOARCH: arm64
+          CGO_ENABLED: "0"
+        run: |
+          go build -v -trimpath -ldflags "-s -w" -o amneziawg-go-linux-arm64 .
+          ls -la amneziawg-go-linux-arm64
+          go version -m amneziawg-go-linux-arm64 | head -5 || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: amneziawg-go-linux-arm64
+          path: amneziawg-go-linux-arm64
+          if-no-files-found: error
